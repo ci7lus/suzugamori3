@@ -19,14 +19,20 @@ a:focus-visible {
 }
 
 .app-shell {
+	--masthead-height: 3.75rem;
 	--orange: #ff9f27;
 	--muted: #6c6259;
 	--line: #eee8e1;
 	--rail: 1.85rem;
 	min-height: 100dvh;
+	padding-block-start: var(--masthead-height);
 }
 
 .masthead {
+	position: fixed;
+	z-index: 3;
+	inset-block-start: 0;
+	inset-inline: 0;
 	background: var(--orange);
 	color: #fff;
 }
@@ -39,7 +45,7 @@ a:focus-visible {
 
 .masthead-inner {
 	display: flex;
-	min-height: 3.75rem;
+	min-height: var(--masthead-height);
 	align-items: center;
 	padding: 0.7rem 1.125rem;
 }
