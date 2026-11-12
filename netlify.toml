@@ -1,0 +1,21 @@
+[build]
+command = "pnpm build"
+publish = "dist"
+
+[functions]
+directory = "netlify/functions"
+
+[[redirects]]
+from = "/api/swarm/profile"
+to = "https://api.foursquare.com/v2/users/self"
+status = 200
+
+[[redirects]]
+from = "/api/swarm/checkins"
+to = "https://api.foursquare.com/v2/users/self/checkins"
+status = 200
+
+[[redirects]]
+from = "/api/swarm/checkins/:id"
+to = "https://api.foursquare.com/v2/checkins/:id"
+status = 200

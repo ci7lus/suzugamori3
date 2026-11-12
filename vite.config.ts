@@ -1,5 +1,4 @@
 import babel from "@rolldown/plugin-babel";
-import tailwindcss from "@tailwindcss/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -9,7 +8,6 @@ export default defineConfig(({ mode }) => ({
 	plugins: [
 		react(),
 		babel({ presets: [reactCompilerPreset()] }),
-		tailwindcss(),
 		VitePWA({
 			devOptions: {
 				enabled: mode === "development",
@@ -41,7 +39,10 @@ export default defineConfig(({ mode }) => ({
 			workbox: {
 				cleanupOutdatedCaches: true,
 				globPatterns: mode === "development" ? [] : ["**/*.{js,png,svg,ico}"],
-				navigateFallbackDenylist: [/^\/\.netlify\/functions\//],
+				navigateFallbackDenylist: [
+					/^\/\.netlify\/functions\//,
+					/^\/api\/swarm\//,
+				],
 			},
 		}),
 	],

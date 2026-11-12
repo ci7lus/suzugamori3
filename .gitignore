@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 /dev-dist/
+
+# Local Netlify folder
+.netlify
