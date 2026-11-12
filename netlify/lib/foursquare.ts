@@ -1,10 +1,8 @@
-export const callbackPath = "/.netlify/functions/swarm-callback";
-
 export async function exchangeCode(
 	code: string,
 	redirectUri: string,
 ): Promise<string> {
-	const clientId = process.env.FOURSQUARE_CLIENT_ID;
+	const clientId = process.env.VITE_FOURSQUARE_CLIENT_ID;
 	const clientSecret = process.env.FOURSQUARE_CLIENT_SECRET;
 	if (!clientId || !clientSecret) {
 		throw new Error("Missing Foursquare OAuth configuration");

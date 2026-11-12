@@ -4,7 +4,6 @@ import type {
 	CheckinShareLink,
 } from "../shared/swarm.ts";
 
-export const loginPath = "/.netlify/functions/swarm-login";
 const checkinsPath = "/api/swarm/checkins";
 const apiVersion = "20240109";
 export const historyLimit = 20;

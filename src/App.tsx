@@ -3,12 +3,8 @@ import useSWRInfinite from "swr/infinite";
 import { accessTokenStorageKey } from "../shared/swarm.ts";
 import AccountMenu from "./AccountMenu.tsx";
 import LoadingPin from "./LoadingPin.tsx";
-import {
-	fetchCheckins,
-	historyLimit,
-	loginPath,
-	SwarmRequestError,
-} from "./swarm-api.ts";
+import { fetchCheckins, historyLimit, SwarmRequestError } from "./swarm-api.ts";
+import { prepareSwarmLogin } from "./swarm-authorization.ts";
 import Timeline from "./Timeline.tsx";
 
 function readStoredAccessToken(): string | null {
@@ -32,7 +28,7 @@ function readLoginNotice(): string | null {
 }
 
 function App() {
-	const [loginNotice] = useState(readLoginNotice);
+	const [loginNotice, setLoginNotice] = useState(readLoginNotice);
 	const [accessToken, setAccessToken] = useState(readStoredAccessToken);
 	const [logoutFailed, setLogoutFailed] = useState(false);
 	const pageEnd = useRef<HTMLDivElement>(null);
@@ -115,6 +111,21 @@ function App() {
 		}
 	}, [unauthorized, endSession]);
 
+	function startLogin() {
+		try {
+			const authorize = prepareSwarmLogin(
+				import.meta.env.VITE_FOURSQUARE_CLIENT_ID,
+				window.location.origin,
+				document,
+			);
+			window.location.assign(authorize.href);
+		} catch {
+			setLoginNotice(
+				"ログインを開始できませんでした。設定とCookieを確認してください。",
+			);
+		}
+	}
+
 	return (
 		<div className="app-shell">
 			<header className="masthead">
@@ -135,9 +146,13 @@ function App() {
 								{loginNotice}
 							</p>
 						)}
-						<a className="action-button" href={loginPath}>
+						<button
+							className="action-button"
+							type="button"
+							onClick={startLogin}
+						>
 							Swarmでログイン
-						</a>
+						</button>
 					</section>
 				) : isLoading ? (
 					<LoadingPin label="チェックインを読み込んでいます…" />

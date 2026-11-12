@@ -1,8 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { accessTokenStorageKey } from "../../shared/swarm.ts";
-import { callbackPath, exchangeCode } from "../lib/foursquare.ts";
+import {
+	callbackPath,
+	readStateCookie,
+	stateCookie,
+} from "../../shared/swarm-oauth.ts";
+import { exchangeCode } from "../lib/foursquare.ts";
 import { appOrigin, methodNotAllowed, noStore } from "../lib/http.ts";
-import { clearStateCookie, readStateCookie } from "../lib/session.ts";
 
 function completeLogin(accessToken: string, headers: Headers): Response {
 	const nonce = randomBytes(16).toString("base64");
@@ -20,10 +24,9 @@ function completeLogin(accessToken: string, headers: Headers): Response {
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Swarmログイン</title>
+	<title>suzugamori3</title>
 </head>
 <body>
-	<p>Swarmにログインしています…</p>
 	<noscript>ログインを完了するにはJavaScriptを有効にしてください。</noscript>
 	<script nonce="${nonce}">
 		try {
@@ -51,8 +54,9 @@ export default async function callback(request: Request): Promise<Response> {
 		return new Response(null, { status: 503, headers: noStore });
 	}
 	const location = new URL("/", origin);
+	const secure = location.protocol === "https:";
 	const headers = new Headers({ ...noStore, "Referrer-Policy": "no-referrer" });
-	headers.append("Set-Cookie", clearStateCookie());
+	headers.append("Set-Cookie", stateCookie("", secure, 0));
 
 	const query = new URL(request.url).searchParams;
 	const states = query.getAll("state");
@@ -62,7 +66,7 @@ export default async function callback(request: Request): Promise<Response> {
 	if (
 		states.length !== 1 ||
 		!states[0] ||
-		states[0] !== readStateCookie(request)
+		states[0] !== readStateCookie(request.headers.get("cookie") ?? "", secure)
 	) {
 		location.searchParams.set("login", "failed");
 	} else if (
