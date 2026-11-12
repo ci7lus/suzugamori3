@@ -1,7 +1,6 @@
 import { Share } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { Checkin } from "../shared/swarm.ts";
-import LoadingPin from "./LoadingPin.tsx";
 import { fetchCheckinShareLink, SwarmRequestError } from "./swarm-api.ts";
 
 const dayFormat = new Intl.DateTimeFormat("ja-JP", {
@@ -59,32 +58,75 @@ function ShareAction({
 	checkin: Checkin;
 	onUnauthorized: () => void;
 }) {
+	const dropdown = useRef<HTMLDivElement>(null);
+	const trigger = useRef<HTMLButtonElement>(null);
+	const optionsId = useId();
+	const [optionsOpen, setOptionsOpen] = useState(false);
 	const [pending, setPending] = useState(false);
-	const [preparedShare, setPreparedShare] = useState<
+	const [retryPayload, setRetryPayload] = useState<
 		(ShareData & { text: string }) | null
 	>(null);
 	const [message, setMessage] = useState("");
 	const venueName = checkin.venueName ?? missingVenue;
+	const hasComment = Boolean(checkin.comment?.length);
+	const hasOptions = hasComment && optionsOpen;
 
-	async function shareOrCopy() {
+	useEffect(() => {
+		if (!hasOptions) {
+			return;
+		}
+		function dismissOutside(event: Event) {
+			if (
+				event.target instanceof Node &&
+				!dropdown.current?.contains(event.target)
+			) {
+				setOptionsOpen(false);
+			}
+		}
+		function dismissOnEscape(event: KeyboardEvent) {
+			if (event.key === "Escape") {
+				event.preventDefault();
+				setOptionsOpen(false);
+				trigger.current?.focus();
+			}
+		}
+		document.addEventListener("pointerdown", dismissOutside);
+		document.addEventListener("focusin", dismissOutside);
+		document.addEventListener("keydown", dismissOnEscape);
+		return () => {
+			document.removeEventListener("pointerdown", dismissOutside);
+			document.removeEventListener("focusin", dismissOutside);
+			document.removeEventListener("keydown", dismissOnEscape);
+		};
+	}, [hasOptions]);
+
+	async function shareOrCopy(includeComment: boolean) {
+		setOptionsOpen(false);
+		trigger.current?.focus();
 		setPending(true);
 		setMessage("");
-		let payload = preparedShare;
+		let payload = retryPayload;
+
 		try {
 			if (!payload) {
 				const details = await fetchCheckinShareLink(accessToken, checkin.id);
+				if (!dropdown.current) {
+					return;
+				}
 				if (!details.url) {
 					setMessage("共有リンクを取得できません。");
 					return;
 				}
+
 				const locality = [details.city, details.state]
 					.filter(Boolean)
 					.join(", ");
 				const placeName = details.venueName ?? missingVenue;
 				const place = locality ? `${placeName} in ${locality}` : placeName;
-				const text = details.comment
-					? `${details.comment} (@ ${place}) ${details.url}`
-					: `I'm at ${place} ${details.url}`;
+				const text =
+					includeComment && details.comment
+						? `${details.comment} (@ ${place}) ${details.url}`
+						: `I'm at ${place} ${details.url}`;
 				payload = { text };
 				if (
 					details.photoUrl &&
@@ -103,6 +145,9 @@ function ShareAction({
 					}
 				}
 			}
+			if (!dropdown.current) {
+				return;
+			}
 			if (
 				typeof navigator.share === "function" &&
 				(typeof navigator.canShare !== "function" ||
@@ -113,22 +158,25 @@ function ShareAction({
 				await navigator.clipboard.writeText(payload.text);
 				setMessage("共有内容をコピーしました。");
 			}
-			setPreparedShare(null);
+			setRetryPayload(null);
 		} catch (error) {
+			if (!dropdown.current) {
+				return;
+			}
 			if (error instanceof SwarmRequestError && error.status === 401) {
 				onUnauthorized();
 			} else if (error instanceof DOMException && error.name === "AbortError") {
-				setPreparedShare(null);
+				setRetryPayload(null);
 			} else if (
 				payload &&
-				!preparedShare &&
+				!retryPayload &&
 				error instanceof DOMException &&
 				error.name === "NotAllowedError"
 			) {
-				setPreparedShare(payload);
+				setRetryPayload(payload);
 				setMessage("もう一度共有アイコンを押してください。");
 			} else {
-				setPreparedShare(null);
+				setRetryPayload(null);
 				setMessage(
 					payload
 						? "共有できませんでした。"
@@ -140,24 +188,48 @@ function ShareAction({
 		}
 	}
 
+	function handleShareClick() {
+		if (retryPayload || !hasComment) {
+			void shareOrCopy(false);
+			return;
+		}
+		setMessage("");
+		setOptionsOpen(!hasOptions);
+	}
+
 	return (
 		<div className="checkin-actions">
-			<button
-				className="checkin-share"
-				type="button"
-				aria-label={`${venueName}のチェックインを共有`}
-				onClick={shareOrCopy}
-				disabled={pending}
-			>
-				<Share size={20} aria-hidden="true" />
-			</button>
+			<div className="share-dropdown" ref={dropdown}>
+				<button
+					className="checkin-share"
+					type="button"
+					ref={trigger}
+					aria-label={`${venueName}のチェックインを共有`}
+					aria-expanded={hasComment && !retryPayload ? hasOptions : undefined}
+					aria-controls={hasOptions ? optionsId : undefined}
+					aria-busy={pending}
+					onClick={handleShareClick}
+					disabled={pending}
+				>
+					<Share size={20} aria-hidden="true" />
+				</button>
+				{hasOptions && (
+					<div className="share-options" id={optionsId}>
+						<button type="button" onClick={() => void shareOrCopy(true)}>
+							コメントを含める
+						</button>
+						<button type="button" onClick={() => void shareOrCopy(false)}>
+							コメントを含めない
+						</button>
+					</div>
+				)}
+			</div>
 			{checkin.isPrivate && <span className="privacy-label">非公開</span>}
 			{message && (
 				<span className="status-message" role="status">
 					{message}
 				</span>
 			)}
-			{pending && <LoadingPin label="共有内容を準備しています…" />}
 		</div>
 	);
 }

@@ -181,6 +181,10 @@ a:focus-visible {
 	box-shadow: 0 3px 12px #37230e0b;
 }
 
+.timeline-panel {
+	overflow: visible;
+}
+
 .login-panel {
 	display: grid;
 	justify-items: center;
@@ -336,6 +340,40 @@ a:focus-visible {
 
 .checkin-share:disabled {
 	opacity: 0.5;
+}
+
+.share-dropdown {
+	position: relative;
+	flex: none;
+}
+
+.share-options {
+	position: absolute;
+	z-index: 2;
+	inset-block-start: 100%;
+	inset-inline-start: 0;
+	display: grid;
+	width: max-content;
+	padding: 0.25rem;
+	border: 1px solid var(--line);
+	border-radius: 0.6rem;
+	background: #fff;
+	box-shadow: 0 4px 14px #37230e24;
+}
+
+.share-options button {
+	min-height: 2.5rem;
+	padding: 0.5rem 0.75rem;
+	border: 0;
+	border-radius: 0.35rem;
+	background: transparent;
+	color: inherit;
+	font-size: 0.875rem;
+	text-align: start;
+}
+
+.share-options button:hover {
+	background: #fff3e2;
 }
 
 .status-message {

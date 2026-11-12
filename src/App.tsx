@@ -157,7 +157,10 @@ function App() {
 				) : isLoading ? (
 					<LoadingPin label="チェックインを読み込んでいます…" />
 				) : (
-					<section className="panel" aria-label="チェックイン履歴">
+					<section
+						className="panel timeline-panel"
+						aria-label="チェックイン履歴"
+					>
 						{logoutFailed && (
 							<p className="status-message inset" role="alert">
 								ログアウトできませんでした。もう一度お試しください。
