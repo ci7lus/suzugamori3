@@ -198,6 +198,10 @@ function App() {
 					</section>
 				)}
 			</main>
+			<footer className="app-footer">
+				<a href="https://github.com/ci7lus/suzugamori3">suzugamori3</a>
+				{" made with ❤️"}
+			</footer>
 		</div>
 	);
 }

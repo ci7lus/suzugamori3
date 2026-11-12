@@ -176,7 +176,18 @@ a:focus-visible {
 }
 
 .main-content {
-	padding: 1.15rem 0.75rem 2rem;
+	padding: 1.15rem 0.75rem;
+}
+
+.app-footer {
+	padding: 0 0.75rem 1.5rem;
+	color: var(--muted);
+	font-size: 0.875rem;
+	text-align: center;
+}
+
+.app-footer a {
+	color: inherit;
 }
 
 .panel {
